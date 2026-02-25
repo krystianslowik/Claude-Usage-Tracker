@@ -48,10 +48,11 @@ We'll keep you informed throughout the process and credit you in the security ad
 
 ### Session Key Storage
 
-- Session keys are stored locally in `~/.claude-session-key`
-- File permissions are automatically set to `0600` (owner read/write only)
+- Session keys are stored securely in macOS Keychain (per-profile)
+- Each profile's credentials are isolated and stored separately
 - Keys are never transmitted except to `claude.ai` via HTTPS
 - No cloud sync or external storage
+- For Claude Code statusline integration, the session key is embedded in `~/.claude/fetch-claude-usage.swift` with `0700` permissions (owner-only access)
 
 ### Application Signing
 
@@ -70,8 +71,9 @@ We'll keep you informed throughout the process and credit you in the security ad
 ### Code Execution
 
 - Claude Code integration scripts are installed to `~/.claude/`
-- Script permissions are set to `755` (read/execute for all, write for owner)
-- Scripts only read the existing session key file
+- Script permissions are set to `700` (read/write/execute for owner only) to protect embedded credentials
+- The Swift script contains the session key embedded directly (not read from a separate file)
+- When statusline is disabled, the script is replaced with a placeholder containing no credentials
 - No arbitrary code execution from external sources
 
 ### Sandboxing
@@ -87,7 +89,8 @@ We'll keep you informed throughout the process and credit you in the security ad
 - Never share your session key publicly
 - Treat it like a password
 - Rotate it if you suspect compromise (extract a fresh key from claude.ai)
-- Check file permissions: `ls -la ~/.claude-session-key` should show `-rw-------`
+- If using Claude Code statusline integration, verify file permissions: `ls -la ~/.claude/fetch-claude-usage.swift` should show `-rwx------` (0700)
+- Session keys are stored in macOS Keychain which provides system-level encryption
 
 ### Verify Downloads
 

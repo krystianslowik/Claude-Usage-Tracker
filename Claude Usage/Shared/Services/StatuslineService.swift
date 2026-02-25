@@ -12,7 +12,11 @@ class StatuslineService {
 
     /// Swift script that fetches Claude usage data from the API.
     /// Installed to ~/.claude/fetch-claude-usage.swift and executed by the bash statusline script.
-    /// The session key and organization ID are injected into this script when statusline is enabled.
+    /// 
+    /// SECURITY NOTE: The session key and organization ID are injected into this script when statusline is enabled.
+    /// The generated script file will contain the session key in plain text on disk at ~/.claude/fetch-claude-usage.swift.
+    /// File permissions should be set to 0600 (owner read/write only) to protect the embedded credentials.
+    /// When statusline is disabled, the script is replaced with a placeholder that contains no credentials.
     private func generateSwiftScript(sessionKey: String, organizationId: String) -> String {
         return """
 #!/usr/bin/env swift
@@ -307,8 +311,9 @@ printf "%s\\n" "$output"
         }
 
         try swiftScriptContent.write(to: swiftDestination, atomically: true, encoding: .utf8)
+        // Use restrictive permissions (0700) to protect embedded session key while keeping executable
         try FileManager.default.setAttributes(
-            [.posixPermissions: 0o755],
+            [.posixPermissions: 0o700],
             ofItemAtPath: swiftDestination.path
         )
 
@@ -328,8 +333,9 @@ printf "%s\\n" "$output"
 
         // Replace with placeholder script that returns error
         try placeholderSwiftScript.write(to: swiftDestination, atomically: true, encoding: .utf8)
+        // Even placeholder uses secure permissions (0700) for consistency
         try FileManager.default.setAttributes(
-            [.posixPermissions: 0o755],
+            [.posixPermissions: 0o700],
             ofItemAtPath: swiftDestination.path
         )
 
